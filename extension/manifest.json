@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Visual Web Comic Dubber using Tesseract.js",
   "version": "1.0.0",
-  "description": "Detects text from comic images and reads them aloud using text-to-speech",
+  "description": "Detects text from comic images using Tesseract.js OCR and reads them aloud using text-to-speech",
   "permissions": [
     "activeTab",
     "storage",

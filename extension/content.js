@@ -258,16 +258,14 @@ async function initTesseractWorker() {
 
     try {
         console.log("Initializing Tesseract worker...");
-        // Create worker with appropriate settings based on quality
-        const worker = await Tesseract.createWorker({
-            logger: (m) =>
-                console.log(
-                    `Tesseract: ${m.status} (${Math.floor(m.progress * 100)}%)`
-                ),
-        });
+
+        // Create a basic worker without custom logger function
+        const worker = await Tesseract.createWorker();
+        console.log("Worker created, loading language data...");
 
         // Load language data
         await worker.loadLanguage("eng");
+        console.log("Language data loaded successfully");
 
         // Set recognition parameters based on quality setting
         let oem = 1; // Default: LSTM only
@@ -283,6 +281,7 @@ async function initTesseractWorker() {
             psm = 11; // Sparse text with OSD
         }
 
+        console.log(`Initializing with OEM: ${oem}, PSM: ${psm}`);
         await worker.initialize("eng", oem);
         await worker.setParameters({
             tessedit_pageseg_mode: psm,
@@ -293,6 +292,7 @@ async function initTesseractWorker() {
         return worker;
     } catch (error) {
         console.error("Failed to initialize Tesseract worker:", error);
+        tesseractWorker = null; // Reset worker on error
         throw error;
     }
 }
@@ -316,7 +316,21 @@ async function extractTextFromImage(img) {
 
         // Recognize text
         console.log("Recognizing text with Tesseract.js...");
+
+        // Set up progress tracking
+        let lastProgress = 0;
+        const progressTracker = setInterval(() => {
+            if (worker.progress && worker.progress.progress > lastProgress) {
+                lastProgress = worker.progress.progress;
+                console.log(`OCR Progress: ${Math.floor(lastProgress * 100)}%`);
+            }
+        }, 300);
+
+        // Perform recognition
         const { data } = await worker.recognize(processedImage);
+
+        // Clear progress tracker
+        clearInterval(progressTracker);
 
         console.log(
             `OCR result received: ${
@@ -332,6 +346,14 @@ async function extractTextFromImage(img) {
         return data.text;
     } catch (error) {
         console.error("OCR Error:", error);
+        // If there was an error with the worker, reset it so we can try again
+        if (error.message && error.message.includes("worker")) {
+            try {
+                await terminateTesseractWorker();
+            } catch (e) {
+                console.error("Error terminating worker after failure:", e);
+            }
+        }
         return null;
     }
 }
