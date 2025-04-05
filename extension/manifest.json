@@ -1,0 +1,49 @@
+{
+  "manifest_version": 3,
+  "name": "Visual Web Comic Dubber",
+  "version": "1.0.0",
+  "description": "Detects text from comic images and reads them aloud using text-to-speech",
+  "permissions": [
+    "activeTab",
+    "storage",
+    "tts"
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "js/*",
+        "traineddata/*"
+      ],
+      "matches": [
+        "<all_urls>"
+      ]
+    }
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "<all_urls>"
+      ],
+      "js": [
+        "js/tesseract.min.js",
+        "content.js"
+      ]
+    }
+  ],
+  "background": {
+    "service_worker": "background.js"
+  }
+}
